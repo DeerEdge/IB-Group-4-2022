@@ -1,12 +1,12 @@
 # Import PyQt5's widgets to be used throughout the program
+
 import PyQt5
 from PyQt5 import *
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-
-
+import time
 
 
 # A class is created that holds all functions of the program
@@ -26,7 +26,8 @@ class ui_main_window(object):
         self.setup_simulation()
 
     def setup_simulation(self):
-        # self.temperature_slider = self.create_horizontal_QSlider("main_window", 390, 50, 240, 40)
+        self.selected_temp_label = self.create_QLabel("main_window", "temp_label", "Selected Temperature: ", 386, 30, 260, 30)
+
         frame = QtWidgets.QWidget(main_window)
         frame.resize(260,60)
         frame.move(380,50)
@@ -36,6 +37,14 @@ class ui_main_window(object):
         self.temperature_slider.resize(260,60)
         frame_layout.addWidget(self.temperature_slider)
         frame.show()
+
+        self.proteins_component = QtWidgets.QGroupBox(main_window)
+        self.proteins_component.setGeometry(72, 163, 28, 87)
+        self.proteins_component.setObjectName("proteins_added")
+        self.proteins_component.hide()
+
+        self.stopwatch_label = self.create_QLabel("main_window", "stopwatch_label", "00.00.0", 240, 30, 260, 40)
+        self.stopwatch_label.setFont(QFont('Arial', 30))
 
         self.cuvette = QtWidgets.QLabel(main_window)
         self.cuvette.setFixedSize(53, 231)
@@ -54,9 +63,14 @@ class ui_main_window(object):
         self.divider_line = self.create_QFrame("main_window", "divider", "VLine", 370, 15, 1, 495)
 
         self.add_proteins_button = self.create_QPushButton("main_window", "add_proteins", "  1.  Add Egg White Proteins (5mL)    ", "None", 380, 110, 260, 50)
+        self.add_proteins_button.clicked.connect(self.add_proteins)
         self.add_hcl_button = self.create_QPushButton("main_window", "add_hcl", "  2.  Add Hydrochrloic Acid (3mL)       ", "None ", 380, 160, 260, 50)
+        self.add_hcl_button.clicked.connect(self.add_hcl)
+        self.add_hcl_button.setEnabled(False)
         self.add_pepsin_and_start_button = self.create_QPushButton("main_window", "add_pepsin", "  3.  Add Pepsin (1mL) and Start       ", "None", 380, 210, 260, 50)
+        self.add_pepsin_and_start_button.setEnabled(False)
         self.end_and_log_button = self.create_QPushButton("main_window", "end_and_log", "  4.  End Simulation and Log Results ", "None", 380, 260, 260, 50)
+        self.end_and_log_button.setEnabled(False)
 
         self.trial_log_label = self.create_QLabel("main_window", "trail_log_label", "Trial Log:", 386, 315, 260, 30)
         self.trial_log_objects = self.create_QScrollArea("main_window", "upcoming_events_QScrollArea", "vertical_layout", 386, 340, 249, 168)
@@ -76,8 +90,30 @@ class ui_main_window(object):
         self.trial_log_scrollArea.setWidget(self.trial_log)
         self.trial_log_scrollArea.verticalScrollBar().setSliderPosition(0)
 
-    def display_results(self):
-        print("results")
+    def add_proteins(self):
+        self.proteins_component.show()
+        self.add_proteins_button.setEnabled(False)
+        self.add_hcl_button.setEnabled(True)
+
+    def add_hcl(self):
+        self.proteins_component.setGeometry(72, 113, 28, 137)
+        self.add_hcl_button.setEnabled(False)
+        self.add_pepsin_and_start_button.setEnabled(True)
+        self.seconds = 0
+        self.minutes = 0
+        # self.add_pepsin_and_start_button.clicked.connect(self.add_pepsin_and_start)
+        timer = QtCore.QTimer(main_window)
+        timer.timeout.connect(self.add_pepsin_and_start)
+        timer.start(6)
+
+
+    def add_pepsin_and_start(self):
+        self.minutes = int(self.seconds / 600)
+        if (self.seconds - self.minutes * 600) < 100:
+            self.stopwatch_label.setText("0" + str(self.minutes) + "." + "0" + str(round((self.seconds / 10 - self.minutes * 60), 1)))
+        else:
+            self.stopwatch_label.setText("0" + str(self.minutes) + "." + str(round((self.seconds / 10 - self.minutes * 60), 1)))
+        self.seconds += 1
 
     # Widget Creation Functions
     def create_QCheckBox(self, container, x_coordinate, y_coordinate, width, length):
@@ -354,7 +390,10 @@ if __name__ == "__main__":
     import sys
     # An application is created
     app = QtWidgets.QApplication(sys.argv)
-    # app.setStyle('Fusion')
+    # Read the css file and apply the stylesheet
+    with open("application_styling.qss", "r") as f:
+        _style = f.read()
+        app.setStyleSheet(_style)
     # A main window is created for the application
     main_window = QtWidgets.QMainWindow()
     # The user interface sets up the main window class

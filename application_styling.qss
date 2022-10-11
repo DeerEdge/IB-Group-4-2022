@@ -1,0 +1,14 @@
+/* Proteins Added */
+QGroupBox#proteins_added {
+    background-color: #efdea1;
+}
+
+/* Proteins Added */
+QGroupBox#hcl_added {
+    background-color: #f1e6bb;
+}
+
+/* Proteins Added */
+QGroupBox#pepsin_added {
+    background-color: #f3e9c5;
+}
