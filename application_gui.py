@@ -16,7 +16,7 @@ class ui_main_window(object):
         main_window.setWindowTitle("How Temperature Affects the Rate of Reaction of Pepsin in Egg White Proteins")
         main_window.setObjectName("main_window")
         # The size of the window is specified using "resize()"
-        main_window.setFixedSize(650, 550)
+        main_window.setFixedSize(750, 550)
 
         # The bottom bar of a window is added using the QStatusBar widget
         self.status_bar = QtWidgets.QStatusBar(main_window)
@@ -26,25 +26,54 @@ class ui_main_window(object):
         self.setup_simulation()
 
     def setup_simulation(self):
-        self.selected_temp_label = self.create_QLabel("main_window", "temp_label", "Selected Temperature: ", 386, 30, 260, 30)
+        global selected_temp
+        global experiment_data
+        global trendline_data
+        global data_index
 
-        frame = QtWidgets.QWidget(main_window)
-        frame.resize(260,60)
-        frame.move(380,50)
-        frame_layout = QtWidgets.QHBoxLayout()
-        frame.setLayout(frame_layout)
-        self.temperature_slider = LabeledSlider(33, 41, 2, orientation=Qt.Horizontal)
-        self.temperature_slider.resize(260,60)
-        frame_layout.addWidget(self.temperature_slider)
-        frame.show()
+        experiment_data = [[0.440, 0.450, 0.470, 0.370, 0.331, 0.434, 0.526, 0.624, 0.654, 0.700, 0.732],
+                           [0.712, 0.798, 0.890, 0.990, 1.055, 1.110, 1.140, 1.140, 1.150, 1.150, 1.150],
+                           [1.210, 0.4520, 0.440, 0.4760, 0.482, 0.482, 0.512, 0.536, 0.550, 0.544, 0.530],
+                           [0.212, 0.604, 0.806, 1.020, 1.180, 1.250, 1.240, 1.250, 1.300, 1.350, 1.400],
+                           [0.107, 0.109, 0.113, 0.112, 0.124, 0.113, 0.114, 0.117, 0.114, 0.115, 0.113]]
+        trendline_data = ["y = (1.13^-3)x + 0.352", "y = (1.44^-3)x + 0.809", "y = (-7.73^-4)x + 0.681", "y = (3.31^-3)x + 0.559", "y = (1.73^-5)x + 0.111"]
+        data_index = 0
+
+        self.selected_temp_label = self.create_QLabel("main_window", "temp_label", "Selected Temperature: 33° Celsius", 486, 30, 260, 30)
+
+        self.temperature_slider = QtWidgets.QSlider(main_window)
+        self.temperature_slider.setGeometry(485, 60, 240, 60)
+        self.temperature_slider.setOrientation(Qt.Orientation.Horizontal)
+        self.temperature_slider.setMinimum(0)
+        self.temperature_slider.setMaximum(4)
+        self.temperature_slider.setValue(0)
+        self.temperature_slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.temperature_slider.setTickInterval(1)
+        selected_temp = 33
+        self.temperature_slider.valueChanged.connect(self.get_temp)
 
         self.proteins_component = QtWidgets.QGroupBox(main_window)
         self.proteins_component.setGeometry(72, 163, 28, 87)
         self.proteins_component.setObjectName("proteins_added")
         self.proteins_component.hide()
 
-        self.stopwatch_label = self.create_QLabel("main_window", "stopwatch_label", "00.00.0", 240, 30, 260, 40)
+        self.stopwatch_label = self.create_QLabel("main_window", "stopwatch_label", "00.00.0", 340, 30, 260, 40)
         self.stopwatch_label.setFont(QFont('Arial', 30))
+
+        self.graphed_results_label = self.create_QLabel("main_window", "graph_label", "Graphed Results: ", 20, 265, 120, 40)
+        self.trendline_label = self.create_QLabel("main_window", "trendline_label", "Trendline Equation: ", 300, 265, 120, 40)
+        self.graph_xlabel = AbsorbanceLabel(main_window)
+        self.graph_xlabel.setGeometry(10, 320, 40, 100)
+        self.graph_ylabel = self.create_QLabel("main_window", "axis_label", "Time (s)", 136, 474, 100, 40)
+        self.placeholder_box = QGroupBox(main_window)
+        self.placeholder_box.setFixedSize(237, 178)
+        self.placeholder_box.move(40, 300)
+        self.placeholder_text = self.create_QLabel("placeholder_box", "placeholder_text_label", "Click Through Steps 1-3 \n    to Run a Simulation", 40, 58, 160, 40)
+        self.placeholder_box2 = QGroupBox(main_window)
+        self.placeholder_box2.setFixedSize(158, 50)
+        self.placeholder_box2.move(300, 300)
+        self.placeholder_text2 = self.create_QLabel("placeholder_box2", "placeholder_text_label",
+                                                   "Click Through \n  Steps 1-3 ", 36, 4, 160, 40)
 
         self.cuvette = QtWidgets.QLabel(main_window)
         self.cuvette.setFixedSize(53, 231)
@@ -53,27 +82,35 @@ class ui_main_window(object):
         self.cuvette.setScaledContents(True)
         self.cuvette.show()
 
-        self.graphed_results = QtWidgets.QLabel(main_window)
-        self.graphed_results.setFixedSize(237, 178)
-        self.graphed_results.move(40, 300)
-        self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/33 Degrees Celsius.png"))
-        self.graphed_results.setScaledContents(True)
-        self.graphed_results.show()
+        self.time_table_label = self.create_QLabel("main_window", "time_table_label", "           Time \n      (Every 30s)", 242, 54, 180, 40)
+        self.absorbance_label = self.create_QLabel("main_window", "absorbance_label", "Absorbance", 366, 64, 180, 40)
+        self.tableWidget = QTableWidget(main_window)
+        self.tableWidget.setGeometry(228, 94, 230, 164)
+        self.tableWidget.setRowCount(11)
+        self.tableWidget.setColumnCount(2)
+        header = self.tableWidget.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        for i in range(11):
+            for j in range(2):
+                TableWidgetItem = QTableWidgetItem("                         ")
+                TableWidgetItem.setFlags(Qt.NoItemFlags)
+                self.tableWidget.setItem(i, j, TableWidgetItem)
 
-        self.divider_line = self.create_QFrame("main_window", "divider", "VLine", 370, 15, 1, 495)
+        self.divider_line = self.create_QFrame("main_window", "divider", "VLine", 470, 15, 1, 495)
 
-        self.add_proteins_button = self.create_QPushButton("main_window", "add_proteins", "  1.  Add Egg White Proteins (5mL)    ", "None", 380, 110, 260, 50)
+        self.add_proteins_button = self.create_QPushButton("main_window", "add_proteins", "  1.  Add Egg White Proteins (5mL)    ", "None", 480, 110, 260, 50)
         self.add_proteins_button.clicked.connect(self.add_proteins)
-        self.add_hcl_button = self.create_QPushButton("main_window", "add_hcl", "  2.  Add Hydrochrloic Acid (3mL)       ", "None ", 380, 160, 260, 50)
+        self.add_hcl_button = self.create_QPushButton("main_window", "add_hcl", "  2.  Add Hydrochrloic Acid (3mL)       ", "None ", 480, 160, 260, 50)
         self.add_hcl_button.clicked.connect(self.add_hcl)
         self.add_hcl_button.setEnabled(False)
-        self.add_pepsin_and_start_button = self.create_QPushButton("main_window", "add_pepsin", "  3.  Add Pepsin (1mL) and Start       ", "None", 380, 210, 260, 50)
+        self.add_pepsin_and_start_button = self.create_QPushButton("main_window", "add_pepsin", "  3.  Add Pepsin (1mL) and Start       ", "None", 480, 210, 260, 50)
+        self.add_pepsin_and_start_button.clicked.connect(self.add_pepsin_and_start)
         self.add_pepsin_and_start_button.setEnabled(False)
-        self.end_and_log_button = self.create_QPushButton("main_window", "end_and_log", "  4.  End Simulation and Log Results ", "None", 380, 260, 260, 50)
+        self.end_and_log_button = self.create_QPushButton("main_window", "end_and_log", "  4.  End Simulation and Log Results ", "None", 480, 260, 260, 50)
         self.end_and_log_button.setEnabled(False)
 
-        self.trial_log_label = self.create_QLabel("main_window", "trail_log_label", "Trial Log:", 386, 315, 260, 30)
-        self.trial_log_objects = self.create_QScrollArea("main_window", "upcoming_events_QScrollArea", "vertical_layout", 386, 340, 249, 168)
+        self.trial_log_label = self.create_QLabel("main_window", "trail_log_label", "Trial Log:", 486, 315, 260, 30)
+        self.trial_log_objects = self.create_QScrollArea("main_window", "upcoming_events_QScrollArea", "vertical_layout", 486, 340, 249, 168)
         self.trial_log = self.trial_log_objects[0]
         self.trial_log_layout = self.trial_log_objects[1]
         self.trial_log_scrollArea = self.trial_log_objects[2]
@@ -90,29 +127,91 @@ class ui_main_window(object):
         self.trial_log_scrollArea.setWidget(self.trial_log)
         self.trial_log_scrollArea.verticalScrollBar().setSliderPosition(0)
 
+    def get_temp(self):
+        global selected_temp
+        selected_temp = 33 + 2 * self.temperature_slider.value()
+        self.selected_temp_label.setText("Selected Temperature: " + str(selected_temp) + "° Celsius")
+
     def add_proteins(self):
+        global data_index
+        global data_index
+        if self.temperature_slider.value() == 0:
+            data_index = 0
+        elif self.temperature_slider.value() == 1:
+            data_index = 1
+        elif self.temperature_slider.value() == 2:
+            data_index = 2
+        elif self.temperature_slider.value() == 3:
+            data_index = 3
+        else:
+            data_index = 4
         self.proteins_component.show()
         self.add_proteins_button.setEnabled(False)
+        self.temperature_slider.setEnabled(False)
         self.add_hcl_button.setEnabled(True)
+        print(data_index)
 
     def add_hcl(self):
         self.proteins_component.setGeometry(72, 113, 28, 137)
         self.add_hcl_button.setEnabled(False)
         self.add_pepsin_and_start_button.setEnabled(True)
-        self.seconds = 0
-        self.minutes = 0
-        # self.add_pepsin_and_start_button.clicked.connect(self.add_pepsin_and_start)
-        timer = QtCore.QTimer(main_window)
-        timer.timeout.connect(self.add_pepsin_and_start)
-        timer.start(6)
-
 
     def add_pepsin_and_start(self):
+        global timer
+        self.add_pepsin_and_start_button.setEnabled(False)
+        self.proteins_component.setGeometry(72, 96, 28, 154)
+        self.placeholder_text.setText("Running Simulation...")
+        self.placeholder_text.move(53, 58)
+        self.seconds = 0
+        self.minutes = 0
+        self.row = 0
+        self.column = 0
+        self.list_index = 0
+        # self.add_pepsin_and_start_button.clicked.connect(self.add_pepsin_and_start)
+        timer = QtCore.QTimer(main_window)
+        timer.timeout.connect(self.timer)
+        timer.start(5)
+
+    def timer(self):
+        global timer
+        global experiment_data
+        global data_index
+        print(data_index)
         self.minutes = int(self.seconds / 600)
-        if (self.seconds - self.minutes * 600) < 100:
+        if self.seconds == 3001:
+            timer.stop()
+            self.graphed_results = QtWidgets.QLabel(main_window)
+            self.graphed_results.setFixedSize(237, 178)
+            self.graphed_results.move(40, 300)
+            if data_index == 0:
+                self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/33 Degrees Celsius.png"))
+            elif data_index == 1:
+                self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/35 Degrees Celsius.png"))
+            elif data_index == 2:
+                self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/37 Degrees Celsius.png"))
+            elif data_index == 3:
+                self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/38 Degrees Celsius.png"))
+            else:
+                self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/41 Degrees Celsius.png"))
+            self.graphed_results.setScaledContents(True)
+            self.graphed_results.show()
+            self.end_and_log_button.setEnabled(True)
+        elif (self.seconds - self.minutes * 600) < 100:
             self.stopwatch_label.setText("0" + str(self.minutes) + "." + "0" + str(round((self.seconds / 10 - self.minutes * 60), 1)))
         else:
             self.stopwatch_label.setText("0" + str(self.minutes) + "." + str(round((self.seconds / 10 - self.minutes * 60), 1)))
+        if (self.seconds == 0 or self.seconds % 300 == 0):
+            if self.seconds < 1000:
+                TableWidgetItemSec = QTableWidgetItem(str(int(self.seconds/10)) + "                    ")
+            else:
+                TableWidgetItemSec = QTableWidgetItem(str(int(self.seconds/10)) + "               ")
+            TableWidgetItemSec.setFlags(Qt.NoItemFlags)
+            self.tableWidget.setItem(self.row, self.column, TableWidgetItemSec)
+            TableWidgetItemVal = QTableWidgetItem(('{:.3f}'.format(experiment_data[data_index][self.list_index])) + "                 ")
+            TableWidgetItemVal.setFlags(Qt.NoItemFlags)
+            self.tableWidget.setItem(self.row, self.column + 1, TableWidgetItemVal)
+            self.list_index += 1
+            self.row += 1
         self.seconds += 1
 
     # Widget Creation Functions
@@ -139,6 +238,10 @@ class ui_main_window(object):
         # Creates and associates QLabel to specified container
         if container == "main_window":
             self.QLabel = QtWidgets.QLabel(main_window)
+        elif container == "placeholder_box":
+            self.QLabel = QtWidgets.QLabel(self.placeholder_box)
+        elif container == "placeholder_box2":
+            self.QLabel = QtWidgets.QLabel(self.placeholder_box2)
         self.QLabel.setObjectName(object_name)
         self.QLabel.setText(text)
         # Geometry of QLabel is specified by the passed function parameters
@@ -269,122 +372,14 @@ class ui_main_window(object):
         self.QPushButton.move(x_coordinate, y_coordinate)
         return self.QPushButton
 
-    def create_horizontal_QwtSlider(self, container, x_coordinate, y_coordinate, width, length):
-        if container == "main_window":
-            self.QwtSlider = QtWidgets.QSlider(Qt.Horizontal, main_window)
-        self.QSlider.setGeometry(x_coordinate, y_coordinate, width, length)
-        return self.QSlider
-
-class LabeledSlider(QtWidgets.QWidget):
-    def __init__(self, minimum, maximum, interval, orientation=Qt.Horizontal,
-            labels=None, parent=None):
-        super(LabeledSlider, self).__init__(parent=parent)
-
-        levels=range(minimum, maximum+interval, interval)
-        if labels is not None:
-            if not isinstance(labels, (tuple, list)):
-                raise Exception("<labels> is a list or tuple.")
-            if len(labels) != len(levels):
-                raise Exception("Size of <labels> doesn't match levels.")
-            self.levels=list(zip(levels,labels))
-        else:
-            self.levels=list(zip(levels,map(str,levels)))
-
-        if orientation==Qt.Horizontal:
-            self.layout=QtWidgets.QVBoxLayout(self)
-        elif orientation==Qt.Vertical:
-            self.layout=QtWidgets.QHBoxLayout(self)
-        else:
-            raise Exception("<orientation> wrong.")
-
-        # gives some space to print labels
-        self.left_margin=10
-        self.top_margin=0
-        self.right_margin=10
-        self.bottom_margin=0
-
-        self.layout.setContentsMargins(self.left_margin,self.top_margin,
-                self.right_margin,self.bottom_margin)
-
-        self.sl=QtWidgets.QSlider(orientation, self)
-        self.sl.setPageStep(2)
-        self.sl.setSingleStep(2)
-        self.sl.setMinimum(minimum)
-        self.sl.setMaximum(maximum)
-        self.sl.setValue(minimum)
-        if orientation==Qt.Horizontal:
-            self.sl.setTickPosition(QtWidgets.QSlider.TicksBelow)
-            self.sl.setMinimumWidth(100) # just to make it easier to read
-            self.sl.setMinimumHeight(25)  # just to make it easier to read
-        else:
-            self.sl.setTickPosition(QtWidgets.QSlider.TicksLeft)
-            self.sl.setMinimumHeight(10) # just to make it easier to read
-        self.sl.setTickInterval(interval)
-
-        self.layout.addWidget(self.sl)
-
-    def paintEvent(self, e):
-        super(LabeledSlider,self).paintEvent(e)
-
-        style=self.sl.style()
-        painter=QPainter(self)
-        st_slider=QStyleOptionSlider()
-        st_slider.initFrom(self.sl)
-        st_slider.orientation=self.sl.orientation()
-
-        length=style.pixelMetric(QStyle.PM_SliderLength, st_slider, self.sl)
-        available=style.pixelMetric(QStyle.PM_SliderSpaceAvailable, st_slider, self.sl)
-
-        for v, v_str in self.levels:
-
-            # get the size of the label
-            rect=painter.drawText(QRect(), Qt.TextDontPrint, v_str)
-
-            if self.sl.orientation()==Qt.Horizontal:
-                # I assume the offset is half the length of slider, therefore
-                # + length//2
-                x_loc=QStyle.sliderPositionFromValue(self.sl.minimum(),
-                        self.sl.maximum(), v, available)+length//2
-
-                # left bound of the text = center - half of text width + L_margin
-                left=x_loc-rect.width()//2+self.left_margin
-                bottom=self.rect().bottom()
-
-                # enlarge margins if clipping
-                if v==self.sl.minimum():
-                    if left<=0:
-                        self.left_margin=rect.width()//2-x_loc
-                    if self.bottom_margin<=rect.height():
-                        self.bottom_margin=rect.height()
-
-                    self.layout.setContentsMargins(self.left_margin,
-                            self.top_margin, self.right_margin,
-                            self.bottom_margin)
-
-                if v==self.sl.maximum() and rect.width()//2>=self.right_margin:
-                    self.right_margin=rect.width()//2
-                    self.layout.setContentsMargins(self.left_margin,
-                            self.top_margin, self.right_margin,
-                            self.bottom_margin)
-
-            else:
-                y_loc=QStyle.sliderPositionFromValue(self.sl.minimum(),
-                        self.sl.maximum(), v, available, upsideDown=True)
-
-                bottom=y_loc+length//2+rect.height()//2+self.top_margin-3
-                # there is a 3 px offset that I can't attribute to any metric
-
-                left=self.left_margin-rect.width()
-                if left<=0:
-                    self.left_margin=rect.width()+2
-                    self.layout.setContentsMargins(self.left_margin,
-                            self.top_margin, self.right_margin,
-                            self.bottom_margin)
-
-            pos=QPoint(left, bottom)
-            painter.drawText(pos, v_str)
-
-        return
+class AbsorbanceLabel(QWidget):
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        painter.setPen(QtCore.Qt.black)
+        painter.translate(20, 100)
+        painter.rotate(-90)
+        painter.drawText(0, 0, "Absorbance")
+        painter.end()
 
 if __name__ == "__main__":
     import sys
