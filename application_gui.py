@@ -53,15 +53,39 @@ class ui_main_window(object):
         self.temperature_slider.valueChanged.connect(self.get_temp)
 
         self.proteins_component = QtWidgets.QGroupBox(main_window)
-        self.proteins_component.setGeometry(72, 163, 28, 87)
+        self.proteins_component.setGeometry(42, 163, 28, 87)
         self.proteins_component.setObjectName("proteins_added")
         self.proteins_component.hide()
+
+        self.observation_label = self.create_QLabel("main_window", "observation_label", "Observations:", 114, 60, 180, 40)
+        self.observation_text_box = QGroupBox(main_window)
+        self.observation_text_box.setFixedSize(100, 166)
+        self.observation_text_box.move(115, 94)
+        self.observation_placeholder = self.create_QLabel("observation_text_box", "placeholder_text_label", "Click Through \n   Steps 1-3 ", 8, 60, 160, 40)
+        self.observation1 = self.create_QLabel("observation_text_box", "observation_labels",
+                                               "- Abs.  usually \n   starts \n   increasing",
+                                               4, 3, 160, 60)
+        self.observation2 = self.create_QLabel("observation_text_box", "observation_labels",
+                                               "- White clumps \n   start forming", 4, 56, 160,
+                                               40)
+        self.observation3 = self.create_QLabel("observation_text_box", "observation_labels",
+                                               "- Abs.  starts \n   to stabilize", 4, 92, 160,
+                                               40)
+        self.observation4 = self.create_QLabel("observation_text_box", "observation_labels",
+                                               "- Begins \n   to separate", 4, 125, 160,
+                                               40)
+        self.observation1.hide()
+        self.observation2.hide()
+        self.observation3.hide()
+        self.observation4.hide()
 
         self.stopwatch_label = self.create_QLabel("main_window", "stopwatch_label", "00.00.0", 340, 30, 260, 40)
         self.stopwatch_label.setFont(QFont('Arial', 30))
 
         self.graphed_results_label = self.create_QLabel("main_window", "graph_label", "Graphed Results: ", 20, 265, 120, 40)
         self.trendline_label = self.create_QLabel("main_window", "trendline_label", "Trendline Equation: ", 300, 265, 120, 40)
+        self.input_label = self.create_QLabel("main_window", "input_label", "Enter a Time in Seconds: ", 300, 345, 150, 40)
+        self.output_label = self.create_QLabel("main_window", "output_label", "Absorbance Value: ", 300, 405, 120, 40)
         self.graph_xlabel = AbsorbanceLabel(main_window)
         self.graph_xlabel.setGeometry(10, 320, 40, 100)
         self.graph_ylabel = self.create_QLabel("main_window", "axis_label", "Time (s)", 136, 474, 100, 40)
@@ -77,7 +101,7 @@ class ui_main_window(object):
 
         self.cuvette = QtWidgets.QLabel(main_window)
         self.cuvette.setFixedSize(53, 231)
-        self.cuvette.move(60, 40)
+        self.cuvette.move(30, 40)
         self.cuvette.setPixmap(QtGui.QPixmap("application_data_and_graphs/cuvette.png"))
         self.cuvette.setScaledContents(True)
         self.cuvette.show()
@@ -152,16 +176,17 @@ class ui_main_window(object):
         print(data_index)
 
     def add_hcl(self):
-        self.proteins_component.setGeometry(72, 113, 28, 137)
+        self.proteins_component.setGeometry(42, 113, 28, 137)
         self.add_hcl_button.setEnabled(False)
         self.add_pepsin_and_start_button.setEnabled(True)
 
     def add_pepsin_and_start(self):
         global timer
         self.add_pepsin_and_start_button.setEnabled(False)
-        self.proteins_component.setGeometry(72, 96, 28, 154)
+        self.proteins_component.setGeometry(42, 96, 28, 154)
         self.placeholder_text.setText("Running Simulation...")
         self.placeholder_text.move(53, 58)
+        self.observation_placeholder.hide()
         self.seconds = 0
         self.minutes = 0
         self.row = 0
@@ -190,7 +215,7 @@ class ui_main_window(object):
             elif data_index == 2:
                 self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/37 Degrees Celsius.png"))
             elif data_index == 3:
-                self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/38 Degrees Celsius.png"))
+                self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/39 Degrees Celsius.png"))
             else:
                 self.graphed_results.setPixmap(QtGui.QPixmap("application_data_and_graphs/41 Degrees Celsius.png"))
             self.graphed_results.setScaledContents(True)
@@ -212,7 +237,19 @@ class ui_main_window(object):
             self.tableWidget.setItem(self.row, self.column + 1, TableWidgetItemVal)
             self.list_index += 1
             self.row += 1
+
+        if self.seconds == 300:
+            self.observation1.show()
+        elif self.seconds == 1200:
+            self.observation2.show()
+        elif self.seconds == 2700:
+            self.observation3.show()
+        elif self.seconds == 3000:
+            self.observation4.show()
         self.seconds += 1
+
+    # def end_and_log(self):
+
 
     # Widget Creation Functions
     def create_QCheckBox(self, container, x_coordinate, y_coordinate, width, length):
@@ -242,6 +279,8 @@ class ui_main_window(object):
             self.QLabel = QtWidgets.QLabel(self.placeholder_box)
         elif container == "placeholder_box2":
             self.QLabel = QtWidgets.QLabel(self.placeholder_box2)
+        elif container == "observation_text_box":
+            self.QLabel = QtWidgets.QLabel(self.observation_text_box)
         self.QLabel.setObjectName(object_name)
         self.QLabel.setText(text)
         # Geometry of QLabel is specified by the passed function parameters
