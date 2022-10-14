@@ -1,18 +1,16 @@
 # Import PyQt5's widgets to be used throughout the program
+from random import randint
 
-import PyQt5
-from PyQt5 import *
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-import time
-
 
 # A class is created that holds all functions of the program
 class ui_main_window(object):
     global trial_num
     trial_num = 1
+
     # This function setups up a basic window where widgets can be added
     def setup_window(self, main_window):
         main_window.setWindowTitle("How Temperature Affects the Rate of Reaction of Pepsin in Egg White Proteins")
@@ -180,6 +178,7 @@ class ui_main_window(object):
         self.add_hcl_button.setEnabled(True)
 
     def add_hcl(self):
+        self.proteins_component.setStyleSheet('QGroupBox {background-color: rgb(243, 228, 171);}')
         self.proteins_component.setGeometry(43, 113, 27, 136)
         self.add_hcl_button.setEnabled(False)
         self.add_pepsin_and_start_button.setEnabled(True)
@@ -187,6 +186,7 @@ class ui_main_window(object):
     def add_pepsin_and_start(self):
         global timer
         self.add_pepsin_and_start_button.setEnabled(False)
+        self.proteins_component.setStyleSheet('QGroupBox {background-color: rgb(243, 234, 203);}')
         self.proteins_component.setGeometry(43, 96, 27, 153)
         self.placeholder_text.setText("Running Simulation...")
         self.placeholder_text.move(53, 62)
@@ -257,6 +257,12 @@ class ui_main_window(object):
 
         if self.seconds == 300:
             self.observation1.show()
+            for i in range(10):
+                # self.molecule = self.create_QLabel("proteins_component", "molecule", "None", randint(1, 26), randint(1, 134), 4, 4)
+                # self.molecule.setStyleSheet("border: 2px solid black;")
+                self.molecule = self.create_QLabel("proteins_component", "molecule", "None", randint(1, 26), randint(1, 134), 4, 4)
+                self.molecule.setStyleSheet("border: 2px solid black;")
+
         elif self.seconds == 1200:
             self.observation2.show()
         elif self.seconds == 2700:
@@ -336,29 +342,9 @@ class ui_main_window(object):
         self.placeholder_text2.setText("Click Through \n  Steps 1-3 ")
         self.placeholder_text.move(40, 58)
         self.placeholder_text2.move(36, 4)
-
-
+        self.proteins_component.setStyleSheet('QGroupBox {background-color: rgb(241, 217, 131);}')
 
     # Widget Creation Functions
-    def create_QCheckBox(self, container, x_coordinate, y_coordinate, width, length):
-        if container == "dashboard_tab":
-            self.QCheckBox = QtWidgets.QCheckBox(self.dashboard_tab)
-        elif container == "upcoming_events_tab":
-            self.QCheckBox = QtWidgets.QCheckBox(self.upcoming_events_tab)
-        elif container == "event":
-            self.QCheckBox = QtWidgets.QCheckBox(self.event_object)
-        self.QCheckBox.resize(width, length)
-        self.QCheckBox.move(x_coordinate, y_coordinate)
-        return QCheckBox
-
-    def create_QCalendar(self, container, x_coordinate, y_coordinate, width, length):
-        if container == "upcoming_events_tab":
-            self.QCalender = QtWidgets.QCalendarWidget(self.upcoming_events_tab)
-        elif container == "admin_events_tab":
-            self.QCalender = QtWidgets.QCalendarWidget(self.admin_events_tab)
-        self.QCalender.setGeometry(x_coordinate, y_coordinate, width, length)
-        return self.QCalender
-
     def create_QLabel(self, container, object_name, text, x_coordinate, y_coordinate, width, length,):
         # Creates and associates QLabel to specified container
         if container == "main_window":
@@ -369,8 +355,11 @@ class ui_main_window(object):
             self.QLabel = QtWidgets.QLabel(self.placeholder_box2)
         elif container == "observation_text_box":
             self.QLabel = QtWidgets.QLabel(self.observation_text_box)
+        elif container == "proteins_component":
+            self.QLabel = QtWidgets.QLabel(self.proteins_component)
         self.QLabel.setObjectName(object_name)
-        self.QLabel.setText(text)
+        if text != "None":
+            self.QLabel.setText(text)
         # Geometry of QLabel is specified by the passed function parameters
         self.QLabel.setGeometry(QtCore.QRect(x_coordinate, y_coordinate, width, length))
         return self.QLabel
@@ -386,44 +375,6 @@ class ui_main_window(object):
         self.QLineEdit.setFixedSize(width, length)
         self.QLineEdit.move(x_coordinate, y_coordinate)
         return self.QLineEdit
-
-    def create_QTextEdit(self, container, object_name, read_only, x_coordinate, y_coordinate, width, length):
-        # Creates and associates QLabel to specified container
-        if container == "login_widget_container":
-            self.QTextEdit = QtWidgets.QTextEdit(self.login_widget_container)
-        elif container == "dashboard_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.dashboard_tab)
-        elif container == "admin_dashboard_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.admin_dashboard_tab)
-        elif container == "upcoming_events_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.upcoming_events_tab)
-        elif container == "points_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.points_tab)
-        elif container == "rewards_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.rewards_tab)
-        elif container == "student_profile_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.student_profile_tab)
-
-            # Administrator
-        elif container == "admin_dashboard_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.admin_dashboard_tab)
-        elif container == "admin_events_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.admin_events_tab)
-        elif container == "maps_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.maps_tab)
-        elif container == "admin_statistics_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.admin_statistics_tab)
-        elif container == "admin_student_view_tab":
-            self.QTextEdit = QtWidgets.QTextEdit(self.admin_student_view_tab)
-        self.QTextEdit.setObjectName(object_name)
-        # user cannot type in the boxes
-        self.QTextEdit.setReadOnly(read_only)
-        # Geometry of QLineEdit is specified by the passed function parameters
-        self.QTextEdit.setFixedSize(width, length)
-        self.QTextEdit.move(x_coordinate, y_coordinate)
-        self.QTextEdit.setWordWrapMode(True)
-
-        return self.QTextEdit
 
     def create_QScrollArea(self, container, object_name, layout, x_coordinate, y_coordinate, fixed_width, min_length):
         self.scrollArea_object_container = QtWidgets.QWidget()
