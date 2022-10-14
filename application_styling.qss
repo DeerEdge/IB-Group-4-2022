@@ -12,3 +12,8 @@ QGroupBox#hcl_added {
 QGroupBox#pepsin_added {
     background-color: #f3e9c5;
 }
+
+/* Backdrop */
+QGroupBox#backdrop {
+    background-color: #545454;
+}
