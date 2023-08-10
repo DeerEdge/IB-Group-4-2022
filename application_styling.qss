@@ -5,7 +5,7 @@ QGroupBox#proteins_added {
 
 /* Backdrop */
 QGroupBox#backdrop {
-    background-color: #545454;
+    background-color: #777777;
 }
 
 /* Molecule */
